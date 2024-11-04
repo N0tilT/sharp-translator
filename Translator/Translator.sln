@@ -3,9 +3,11 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.10.35004.147
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Translator.Integration", "Translator.Integration\Translator.Integration.csproj", "{9940715D-A316-4CBA-AD89-63DE60FB5710}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Translator.Integration", "Translator.Integration\Translator.Integration.csproj", "{9940715D-A316-4CBA-AD89-63DE60FB5710}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Translator.Core", "Translator.Core\Translator.Core.csproj", "{1FE40DE6-49D1-4793-B6E7-4A3A6A4000A1}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Translator.Core", "Translator.Core\Translator.Core.csproj", "{1FE40DE6-49D1-4793-B6E7-4A3A6A4000A1}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Translator.View", "Translator.View\Translator.View.csproj", "{9E287199-8E1F-4A90-8985-74E1F55F4C5A}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -21,6 +23,10 @@ Global
 		{1FE40DE6-49D1-4793-B6E7-4A3A6A4000A1}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{1FE40DE6-49D1-4793-B6E7-4A3A6A4000A1}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{1FE40DE6-49D1-4793-B6E7-4A3A6A4000A1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9E287199-8E1F-4A90-8985-74E1F55F4C5A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9E287199-8E1F-4A90-8985-74E1F55F4C5A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9E287199-8E1F-4A90-8985-74E1F55F4C5A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9E287199-8E1F-4A90-8985-74E1F55F4C5A}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
