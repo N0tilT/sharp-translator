@@ -6,6 +6,7 @@
     public class SyntaxAnalyzer
     {
         private NameTable nameTable = new NameTable();
+        private string currentLabel;
 
         /// <summary>
         /// Компилирует исходный код из указанного файла.
@@ -136,7 +137,78 @@
                     Error();
                 }
             }
+            else if (LexicalAnalyzer.CurrentLexem == Lexems.If)
+            {
+                ParseBranching();
+            }
+            else if (LexicalAnalyzer.CurrentLexem == Lexems.While)
+            {
+                ParseLoop();
+            }
         }
+        /// <summary>
+        /// Парсит инструкцию ветвления.
+        /// </summary>
+        private void ParseBranching()
+        {
+            CheckLexem(Lexems.If);
+
+            CodeGenerator.AddLabel();
+            string lowerLabel = CodeGenerator.GetCurrentLabel();
+            currentLabel = lowerLabel;
+            CodeGenerator.AddLabel();
+            string exitLabel = CodeGenerator.GetCurrentLabel();
+
+            ParseExpression();
+            CheckLexem(Lexems.Then);
+            ParseInstructionSequence();
+            CodeGenerator.AddInstruction("jmp " + exitLabel);
+
+            while (LexicalAnalyzer.CurrentLexem == Lexems.ElseIf)
+            {
+                CodeGenerator.AddInstruction(lowerLabel + ":");
+                CodeGenerator.AddLabel();
+                lowerLabel = CodeGenerator.GetCurrentLabel();
+                currentLabel = lowerLabel;
+
+                LexicalAnalyzer.ParseNextLexem();
+                ParseExpression();
+                CheckLexem(Lexems.Then);
+                ParseInstructionSequence();
+                CodeGenerator.AddInstruction("jmp " + exitLabel);
+            }
+
+            if (LexicalAnalyzer.CurrentLexem == Lexems.Else)
+            {
+                CodeGenerator.AddInstruction(lowerLabel + ":");
+                LexicalAnalyzer.ParseNextLexem();
+                ParseInstructionSequence();
+            }
+
+            CheckLexem(Lexems.EndIf);
+            CodeGenerator.AddInstruction(exitLabel + ":");
+        }
+
+        /// <summary>
+        /// Парсит инструкцию цикла.
+        /// </summary>
+        private void ParseLoop()
+        {
+            CheckLexem(Lexems.While);
+            CodeGenerator.AddLabel();
+            string upperLabel = CodeGenerator.GetCurrentLabel();
+            CodeGenerator.AddLabel();
+            string lowerLabel = CodeGenerator.GetCurrentLabel();
+            currentLabel = lowerLabel;
+            CodeGenerator.AddInstruction(upperLabel + ":");
+            ParseExpression();
+            CheckLexem(Lexems.Do);
+            ParseInstructionSequence();
+            CheckLexem(Lexems.EndWhile);
+            CodeGenerator.AddInstruction("jmp " + upperLabel);
+            CodeGenerator.AddInstruction(lowerLabel + ":");
+        }
+
 
         /// <summary>
         /// Парсит инструкцию присваивания.
@@ -161,7 +233,48 @@
         /// <returns>Тип операции</returns>
         private tType ParseExpression()
         {
-            return ParseImplication();
+            tType t = ParseImplication();
+
+            while (LexicalAnalyzer.CurrentLexem == Lexems.Equal ||
+                   LexicalAnalyzer.CurrentLexem == Lexems.NotEqual ||
+                   LexicalAnalyzer.CurrentLexem == Lexems.Less ||
+                   LexicalAnalyzer.CurrentLexem == Lexems.Greater ||
+                   LexicalAnalyzer.CurrentLexem == Lexems.LessOrEqual ||
+                   LexicalAnalyzer.CurrentLexem == Lexems.GreaterOrEqual)
+            {
+                string jump = "";
+                switch (LexicalAnalyzer.CurrentLexem)
+                {
+                    case Lexems.Equal:
+                        jump = "jne";
+                        break;
+                    case Lexems.NotEqual:
+                        jump = "je";
+                        break;
+                    case Lexems.Greater:
+                        jump = "jle";
+                        break;
+                    case Lexems.GreaterOrEqual:
+                        jump = "jl";
+                        break;
+                    case Lexems.Less:
+                        jump = "jge";
+                        break;
+                    case Lexems.LessOrEqual:
+                        jump = "jg";
+                        break;
+                }
+                LexicalAnalyzer.ParseNextLexem();
+                ParseImplication(); 
+                CodeGenerator.AddInstruction("pop ax");
+                CodeGenerator.AddInstruction("pop bx");
+                CodeGenerator.AddInstruction("cmp bx, ax");
+                CodeGenerator.AddInstruction(jump + " " + currentLabel);
+                currentLabel = "";
+                t = tType.Bool; // Возвращаем тип логического выражения
+            }
+
+            return t;
         }
 
         /// <summary>

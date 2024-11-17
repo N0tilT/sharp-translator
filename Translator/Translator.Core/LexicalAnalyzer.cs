@@ -3,15 +3,15 @@
 /// </summary>
 public enum Lexems
 {
-    None, Name, True, False, Logical, Begin, End, Var, Print, Assign,
+    None, Name, True, False, Logical, Begin, End, Var, Print, Assign, If, While, EndIf, EndWhile, Equal, NotEqual, Less, LessOrEqual, Greater, GreaterOrEqual, Then, ElseIf,Else,Do,
     LeftBracket, RightBracket, Semi, Comma, EOF,
     Disjunction, Conjunction, Implication,
     Negation, BinaryOp, Colon
 }
 
-/// <summary>
-/// Структура, представляющая ключевое слово с его соответствующей лексемой.
-/// </summary>
+// <summary>
+// Структура, представляющая ключевое слово с его соответствующей лексемой.
+// </summary>
 public struct Keyword
 {
     /// <summary>
@@ -69,6 +69,14 @@ public static class LexicalAnalyzer
         AddKeyword("Var", Lexems.Var);
         AddKeyword("Print", Lexems.Print);
         AddKeyword("Logical", Lexems.Logical);
+        AddKeyword("If", Lexems.If);
+        AddKeyword("While", Lexems.While);
+        AddKeyword("Endif", Lexems.EndIf);
+        AddKeyword("Endwhile", Lexems.EndWhile);
+        AddKeyword("Then", Lexems.Then);
+        AddKeyword("ElseIf", Lexems.If);
+        AddKeyword("Else", Lexems.Else);
+        AddKeyword("Do", Lexems.Do);
 
         Reader.Initialize(filePath);
         currentLexem = Lexems.None;
@@ -174,9 +182,18 @@ public static class LexicalAnalyzer
         }
         else if (Reader.CurrentSymbol == '!')
         {
-            currentName = null;
-            Reader.ReadNextSymbol();
-            currentLexem = Lexems.Negation;
+            Reader.ReadNextSymbol(); 
+            if (Reader.CurrentSymbol == '=')
+            {
+                currentName = null;
+                Reader.ReadNextSymbol();
+                currentLexem = Lexems.NotEqual;
+            }
+            else
+            {
+                currentName = null;
+                currentLexem = Lexems.Negation;
+            }
         }
         else if (Reader.CurrentSymbol == '&')
         {
@@ -189,12 +206,57 @@ public static class LexicalAnalyzer
             currentName = null;
             currentLexem = Lexems.Disjunction;
             Reader.ReadNextSymbol();
+
         }
         else if (Reader.CurrentSymbol == '^')
         {
             currentName = null;
             currentLexem = Lexems.Implication;
             Reader.ReadNextSymbol();
+        }
+        else if(Reader.CurrentSymbol == '<')
+        {
+            Reader.ReadNextSymbol();
+            if (Reader.CurrentSymbol == '=')
+            {
+                currentName = null;
+                Reader.ReadNextSymbol();
+                currentLexem = Lexems.LessOrEqual;
+            }
+            else
+            {
+                currentName = null;
+                currentLexem = Lexems.Less;
+            }
+        }
+        else if (Reader.CurrentSymbol == '>')
+        {
+            Reader.ReadNextSymbol();
+            if (Reader.CurrentSymbol == '=')
+            {
+                currentName = null;
+                Reader.ReadNextSymbol();
+                currentLexem = Lexems.GreaterOrEqual;
+            }
+            else
+            {
+                currentName = null;
+                currentLexem = Lexems.Greater;
+            }
+        }
+        else if (Reader.CurrentSymbol == '=')
+        {
+            Reader.ReadNextSymbol(); 
+            if (Reader.CurrentSymbol == '=')
+            {
+                currentName = null;
+                Reader.ReadNextSymbol();
+                currentLexem = Lexems.Equal;
+            }
+            else
+            {
+                throw new Exception($"Ошибка: Недопустимый символ: {Reader.CurrentSymbol}");
+            }
         }
         else
         {

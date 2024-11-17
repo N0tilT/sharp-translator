@@ -6,6 +6,17 @@
     public static class CodeGenerator
     {
         private static List<string> code = new List<string>();
+        private static int countLabels = 0;
+
+        public static void AddLabel()
+        {
+            countLabels++;
+        }
+
+        public static string GetCurrentLabel()
+        {
+            return "label" + countLabels.ToString();
+        }
 
         /// <summary>
         /// Добавляет инструкцию в сгенерированный код.
