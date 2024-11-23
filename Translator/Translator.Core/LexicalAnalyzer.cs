@@ -3,10 +3,14 @@
 /// </summary>
 public enum Lexems
 {
-    None, Name, True, False, Logical, Begin, End, Var, Print, Assign, If, While, EndIf, EndWhile, Equal, NotEqual, Less, LessOrEqual, Greater, GreaterOrEqual, Then, ElseIf,Else,Do,
-    LeftBracket, RightBracket, Semi, Comma, EOF,
-    Disjunction, Conjunction, Implication,
-    Negation, BinaryOp, Colon
+    None, Name, 
+    True, False, Logical, Integer,
+    Begin, End, Var, Print, Assign, If, While, EndIf, EndWhile, Equal, NotEqual, Less, LessOrEqual, Greater, GreaterOrEqual, Then, ElseIf,Else,Do,LeftBracket, RightBracket, Semi, Comma, EOF, Colon,
+    Disjunction, Conjunction, Implication, Negation, BinaryOp,
+    Sum,
+    Subtract,
+    Multiplication,
+    Division
 }
 
 // <summary>
@@ -69,12 +73,15 @@ public static class LexicalAnalyzer
         AddKeyword("Var", Lexems.Var);
         AddKeyword("Print", Lexems.Print);
         AddKeyword("Logical", Lexems.Logical);
+        AddKeyword("True", Lexems.True);
+        AddKeyword("False", Lexems.False);
+        AddKeyword("Integer", Lexems.Integer);
         AddKeyword("If", Lexems.If);
         AddKeyword("While", Lexems.While);
-        AddKeyword("Endif", Lexems.EndIf);
-        AddKeyword("Endwhile", Lexems.EndWhile);
+        AddKeyword("EndIf", Lexems.EndIf);
+        AddKeyword("EndWhile", Lexems.EndWhile);
         AddKeyword("Then", Lexems.Then);
-        AddKeyword("ElseIf", Lexems.If);
+        AddKeyword("ElseIf", Lexems.ElseIf);
         AddKeyword("Else", Lexems.Else);
         AddKeyword("Do", Lexems.Do);
 
@@ -128,18 +135,7 @@ public static class LexicalAnalyzer
         }
         else if (char.IsDigit(Reader.CurrentSymbol))
         {
-            if (Reader.CurrentSymbol == '0')
-            {
-                currentName = null;
-                Reader.ReadNextSymbol();
-                currentLexem = Lexems.False;
-            }
-            else if (Reader.CurrentSymbol == '1')
-            {
-                currentName = null;
-                Reader.ReadNextSymbol();
-                currentLexem = Lexems.True;
-            }
+            ParseInteger();
         }
         else if (Reader.CurrentSymbol == '(')
         {
@@ -179,6 +175,30 @@ public static class LexicalAnalyzer
             currentName = null;
             Reader.ReadNextSymbol();
             currentLexem = Lexems.Comma;
+        }
+        else if (Reader.CurrentSymbol == '+')
+        {
+            currentName = null;
+            currentLexem = Lexems.Sum;
+            Reader.ReadNextSymbol();
+        }
+        else if (Reader.CurrentSymbol == '-')
+        {
+            currentName = null;
+            currentLexem = Lexems.Subtract;
+            Reader.ReadNextSymbol();
+        }
+        else if (Reader.CurrentSymbol == '*')
+        {
+            currentName = null;
+            currentLexem = Lexems.Multiplication;
+            Reader.ReadNextSymbol();
+        }
+        else if (Reader.CurrentSymbol == '/')
+        {
+            currentName = null;
+            currentLexem = Lexems.Division;
+            Reader.ReadNextSymbol();
         }
         else if (Reader.CurrentSymbol == '!')
         {
@@ -262,6 +282,21 @@ public static class LexicalAnalyzer
         {
             throw new Exception($"Ошибка: Недопустимый символ: {Reader.CurrentSymbol}");
         }
+    }
+
+    private static void ParseInteger()
+    {
+        string integerValue = string.Empty;
+
+        do
+        {
+            integerValue += Reader.CurrentSymbol;
+            Reader.ReadNextSymbol();
+        }
+        while (char.IsDigit(Reader.CurrentSymbol));
+
+        currentName = integerValue;
+        currentLexem = Lexems.Integer; 
     }
 
     /// <summary>

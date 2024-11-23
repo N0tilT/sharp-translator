@@ -1,4 +1,6 @@
-﻿namespace Translator.Core
+﻿
+
+namespace Translator.Core
 {
     /// <summary>
     /// Статический класс, ответственный за генерацию кода во время компиляции.
@@ -96,6 +98,17 @@
             AddInstruction("RET");
             AddInstruction("PRINT ENDP");
         }
+        /// <summary>
+        /// Объявляет процедуру печати в сгенерированном коде.
+        /// </summary>
+        public static void DeclarePrintSpaceProcedure()
+        {
+            AddInstruction("PRINT_SPACE:");
+            AddInstruction("ADD DL, ' '");
+            AddInstruction("MOV AH, 2");
+            AddInstruction("INT 21H");
+            AddInstruction("RET");
+        }
 
         /// <summary>
         /// Объявляет переменные в сегменте данных на основе таблицы имен.
@@ -184,12 +197,41 @@
         }
 
         /// <summary>
+        /// Генерация инструкций добавления в регистр целого числа
+        /// </summary>
+        /// <param name="currentName"></param>
+        public static void AddLoadIntegerInstruction(string? currentName)
+        {
+            AddInstruction($"mov ax, {currentName}");
+        }
+        /// <summary>
         /// Получает сгенерированный код в виде массива строк.
         /// </summary>
         /// <returns>Массив строк с сгенерированным кодом.</returns>
         public static string[] GetGeneratedCode()
         {
             return code.ToArray();
+        }
+
+        internal static void AddSumInstruction()
+        {
+        }
+
+        internal static void AddSubtractInstruction()
+        {
+        }
+
+        internal static void AddMultiplicationInstruction()
+        {
+        }
+
+        internal static void AddDivisionInstruction()
+        {
+        }
+
+        //(-A * -B) + (A * B)
+        internal static void AddEquityInstruction()
+        {
         }
     }
 }

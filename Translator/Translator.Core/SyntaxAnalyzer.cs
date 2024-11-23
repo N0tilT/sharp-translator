@@ -1,4 +1,7 @@
-﻿namespace Translator.Core
+﻿
+
+
+namespace Translator.Core
 {
     /// <summary>
     /// Класс, ответственный за синтаксический анализ и компиляцию исходного кода.
@@ -33,6 +36,7 @@
             ParsePrintInstruction();
             CodeGenerator.DeclareMainProcedureEnd();
             CodeGenerator.DeclarePrintProcedure();
+            CodeGenerator.DeclarePrintSpaceProcedure();
             CodeGenerator.DeclareEndOfCode();
         }
 
@@ -42,18 +46,21 @@
         private void ParsePrintInstruction()
         {
             CheckLexem(Lexems.Print);
-            if (LexicalAnalyzer.CurrentLexem == Lexems.Name)
+            while (true)
             {
-                Identifier x = nameTable.FindByName(LexicalAnalyzer.CurrentName);
-                CodeGenerator.AddInstruction("mov ax, " + LexicalAnalyzer.CurrentName);
-                CodeGenerator.AddInstruction("push ax");
-                CodeGenerator.AddInstruction("CALL PRINT");
-                CodeGenerator.AddInstruction("pop ax");
-                LexicalAnalyzer.ParseNextLexem();
-            }
-            else
-            {
-                Error();
+                if (LexicalAnalyzer.CurrentLexem == Lexems.Name)
+                {
+                    Identifier x = nameTable.FindByName(LexicalAnalyzer.CurrentName);
+                    CodeGenerator.AddInstruction("mov ax, " + LexicalAnalyzer.CurrentName);
+                    CodeGenerator.AddInstruction("push ax");
+                    CodeGenerator.AddInstruction("CALL PRINT");
+                    CodeGenerator.AddInstruction("CALL PRINT_SPACE");
+                    CodeGenerator.AddInstruction("pop ax");
+                    LexicalAnalyzer.ParseNextLexem();
+                }
+                else if (LexicalAnalyzer.CurrentLexem == Lexems.Semi) break;
+                else if (LexicalAnalyzer.CurrentLexem == Lexems.Comma) LexicalAnalyzer.ParseNextLexem();
+                else Error();
             }
         }
 
@@ -81,6 +88,14 @@
                         {
                             variables.Add(variableName);
                             variables.ForEach(variable => nameTable.AddIdentifier(variable, tCat.Var, tType.Bool));
+                            variables.Clear();
+                            LexicalAnalyzer.ParseNextLexem();
+                        }
+                        else if (LexicalAnalyzer.CurrentLexem == Lexems.Integer)
+                        {
+                            variables.Add(variableName);
+                            variables.ForEach(variable => nameTable.AddIdentifier(variable, tCat.Var, tType.Int));
+                            variables.Clear();
                             LexicalAnalyzer.ParseNextLexem();
                         }
                         else
@@ -128,7 +143,7 @@
                 Identifier x = nameTable.FindByName(LexicalAnalyzer.CurrentName);
                 if (!x.Equals(default(Identifier)))
                 {
-                    ParseAssignmentInstruction();
+                    ParseAssignmentInstruction(x.Type);
                     CodeGenerator.AddInstruction("pop ax");
                     CodeGenerator.AddInstruction("mov " + x.Name + ", ax");
                 }
@@ -213,13 +228,14 @@
         /// <summary>
         /// Парсит инструкцию присваивания.
         /// </summary>
-        private void ParseAssignmentInstruction()
+        private void ParseAssignmentInstruction(tType type)
         {
             LexicalAnalyzer.ParseNextLexem();
             if (LexicalAnalyzer.CurrentLexem == Lexems.Assign)
             {
                 LexicalAnalyzer.ParseNextLexem();
                 ParseExpression();
+
             }
             else
             {
@@ -233,7 +249,7 @@
         /// <returns>Тип операции</returns>
         private tType ParseExpression()
         {
-            tType t = ParseImplication();
+            tType t = ParseEquity();
 
             while (LexicalAnalyzer.CurrentLexem == Lexems.Equal ||
                    LexicalAnalyzer.CurrentLexem == Lexems.NotEqual ||
@@ -265,18 +281,39 @@
                         break;
                 }
                 LexicalAnalyzer.ParseNextLexem();
-                ParseImplication(); 
+                ParseSumOrSubtraction();
                 CodeGenerator.AddInstruction("pop ax");
                 CodeGenerator.AddInstruction("pop bx");
                 CodeGenerator.AddInstruction("cmp bx, ax");
                 CodeGenerator.AddInstruction(jump + " " + currentLabel);
                 currentLabel = "";
-                t = tType.Bool; // Возвращаем тип логического выражения
+                t = tType.Bool;
             }
-
             return t;
         }
+        /// <summary>
+        /// Парсит импликацию
+        /// </summary>
+        /// <returns>Тип операции</returns>
+        private tType ParseEquity()
+        {
+            tType type = ParseImplication();
+            if (LexicalAnalyzer.CurrentLexem == Lexems.Equal)
+            {
+                Lexems operatorLexem = LexicalAnalyzer.CurrentLexem;
+                LexicalAnalyzer.ParseNextLexem();
+                tType s_type = ParseImplication();
+                if (type == s_type)
+                {
+                    CodeGenerator.AddEquityInstruction();
+                    return tType.Bool;
+                }
+                else
+                    Error();
 
+            }
+            return type;
+        }
         /// <summary>
         /// Парсит импликацию
         /// </summary>
@@ -288,8 +325,11 @@
             {
                 Lexems operatorLexem = LexicalAnalyzer.CurrentLexem;
                 LexicalAnalyzer.ParseNextLexem();
-                type = ParseDisjunction();
-                CodeGenerator.AddImplicationInstruction();
+                tType s_type = ParseDisjunction();
+                if (type == tType.Bool && s_type == tType.Bool)
+                    CodeGenerator.AddImplicationInstruction();
+                else
+                    Error();
             }
             return type;
         }
@@ -305,8 +345,11 @@
             {
                 Lexems operatorLexem = LexicalAnalyzer.CurrentLexem;
                 LexicalAnalyzer.ParseNextLexem();
-                type = ParseConjunction();
-                CodeGenerator.AddDisjunctionInstruction();
+                tType s_type = ParseConjunction();
+                if (type == tType.Bool && s_type == tType.Bool)
+                    CodeGenerator.AddDisjunctionInstruction();
+                else
+                    Error();
             }
             return type;
         }
@@ -317,13 +360,68 @@
         /// <returns>Тип операции</returns>
         private tType ParseConjunction()
         {
-            tType type = ParseSubexpression();
+            tType type = ParseSumOrSubtraction();
             while (LexicalAnalyzer.CurrentLexem == Lexems.Conjunction)
             {
                 Lexems operatorLexem = LexicalAnalyzer.CurrentLexem;
                 LexicalAnalyzer.ParseNextLexem();
-                type = ParseSubexpression();
-                CodeGenerator.AddConjunctionInstruction();
+                tType s_type = ParseSumOrSubtraction();
+                if (type == tType.Bool && s_type == tType.Bool)
+                    CodeGenerator.AddConjunctionInstruction();
+                else
+                    Error();
+            }
+            return type;
+        }
+
+        /// <summary>
+        /// Парсит сумму или вычитание
+        /// </summary>
+        /// <returns>Тип операции</returns>
+        private tType ParseSumOrSubtraction()
+        {
+            tType type = ParseMultiplicationOrDivision();
+            while (LexicalAnalyzer.CurrentLexem == Lexems.Sum || LexicalAnalyzer.CurrentLexem == Lexems.Subtract)
+            {
+                Lexems operatorLexem = LexicalAnalyzer.CurrentLexem;
+                LexicalAnalyzer.ParseNextLexem();
+                tType s_type = ParseMultiplicationOrDivision();
+                if (type == s_type && type == tType.Int)
+                    if (operatorLexem == Lexems.Sum)
+                        CodeGenerator.AddSumInstruction();
+                    else if (operatorLexem == Lexems.Subtract)
+                        CodeGenerator.AddSubtractInstruction();
+                    else
+                        Error();
+                else
+                    Error();
+            }
+            return type;
+        }
+
+
+        /// <summary>
+        /// Парсит Умножение или деление
+        /// </summary>
+        /// <returns>Тип операции</returns>
+        private tType ParseMultiplicationOrDivision()
+        {
+            tType type = ParseSubexpression();
+            while (LexicalAnalyzer.CurrentLexem == Lexems.Multiplication || LexicalAnalyzer.CurrentLexem == Lexems.Division)
+            {
+                Lexems operatorLexem = LexicalAnalyzer.CurrentLexem;
+                LexicalAnalyzer.ParseNextLexem();
+                tType s_type = ParseSubexpression();
+
+                if (type == s_type && type == tType.Int)
+                    if (operatorLexem == Lexems.Multiplication)
+                        CodeGenerator.AddMultiplicationInstruction();
+                    else if (operatorLexem == Lexems.Division)
+                        CodeGenerator.AddDivisionInstruction();
+                    else
+                        Error();
+                else
+                    Error();
             }
             return type;
         }
@@ -374,6 +472,12 @@
                 CodeGenerator.AddExtractFalseInstruction();
                 LexicalAnalyzer.ParseNextLexem();
                 return tType.Bool;
+            }
+            else if (LexicalAnalyzer.CurrentLexem == Lexems.Integer)
+            {
+                CodeGenerator.AddLoadIntegerInstruction(LexicalAnalyzer.CurrentName);
+                LexicalAnalyzer.ParseNextLexem();
+                return tType.Int;
             }
             else if (LexicalAnalyzer.CurrentLexem == Lexems.LeftBracket)
             {
