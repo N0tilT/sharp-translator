@@ -62,8 +62,8 @@ public static class LexicalAnalyzer
     /// <summary>
     /// Инициализирует лексический анализатор с указанным путем к файлу.
     /// </summary>
-    /// <param name="filePath">Путь к исходному файлу.</param>
-    public static void Initialize(string filePath)
+    /// <param name="code">Исходный файл.</param>
+    public static void Initialize(string code)
     {
         keywords = new Keyword[20];
         keywordsPointer = 0;
@@ -85,7 +85,7 @@ public static class LexicalAnalyzer
         AddKeyword("Else", Lexems.Else);
         AddKeyword("Do", Lexems.Do);
 
-        Reader.Initialize(filePath);
+        Reader.Initialize(code);
         currentLexem = Lexems.None;
     }
 

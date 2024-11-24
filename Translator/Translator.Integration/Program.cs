@@ -32,13 +32,13 @@ void RunDosBoxTest(string fileName, string code)
 string baseDirectory = AppDomain.CurrentDomain.BaseDirectory;
 string sourceFilePath = Path.Combine(baseDirectory, SourceFileName + ".txt");
 string compiledFilePath = Path.Combine(baseDirectory, ProgramFileName + ".asm");
+string sourceCode = File.ReadAllText(sourceFilePath);
 
 var syntaxAnalyzer = new SyntaxAnalyzer();
-syntaxAnalyzer.Compile(sourceFilePath);
+syntaxAnalyzer.Compile(sourceCode);
 
 var code = string.Join("\n", CodeGenerator.GetGeneratedCode());
 File.WriteAllText(compiledFilePath, code);
 Console.WriteLine(code);
-Reader.Close();
 
 RunDosBoxTest(ProgramFileName, code);

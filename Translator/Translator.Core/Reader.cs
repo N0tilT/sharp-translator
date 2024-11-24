@@ -7,7 +7,7 @@ public static class Reader
     private static int characterPositionInLine;
     private static int currentSymbol;
 
-    private static StreamReader streamReader;
+    private static string code;
 
     /// <summary>
     /// Номер текущей строки.
@@ -22,30 +22,32 @@ public static class Reader
     /// <summary>
     /// Текущий читаемый символ.
     /// </summary>
-    public static char CurrentSymbol => (char)currentSymbol;
+    public static char CurrentSymbol => code[currentSymbol];
 
     /// <summary>
     /// Константа, представляющая конец файла.
     /// </summary>
-    public const int EndOfFile = 65535;
+    public const char EndOfFile = '\0';
 
     /// <summary>
     /// Читает следующий символ из файла и обновляет состояние строки и позиции.
     /// </summary>
     public static void ReadNextSymbol()
     {
-        currentSymbol = streamReader.Read();
+        currentSymbol++;
+        if (currentSymbol >= code.Length)
+            return;
 
-        if (currentSymbol == EndOfFile)
+        if (code[currentSymbol] == EndOfFile)
         {
             return;
         }
-        else if (currentSymbol == '\n')
+        else if (code[currentSymbol] == '\n')
         {
             lineNumber++;
             characterPositionInLine = 0;
         }
-        else if (currentSymbol == '\r' || currentSymbol == '\t')
+        else if (code[currentSymbol] == '\r' || code[currentSymbol] == '\t')
         {
             ReadNextSymbol();
             return;
@@ -59,33 +61,14 @@ public static class Reader
     /// <summary>
     /// Инициализирует чтение из указанного файла.
     /// </summary>
-    /// <param name="filePath">Путь к файлу для чтения.</param>
-    public static void Initialize(string filePath)
+    /// <param name="code">Исходный файл для чтения.</param>
+    public static void Initialize(string code)
     {
-        if (streamReader != null)
-        {
-            Close();
-        }
-
-        if (File.Exists(filePath))
-        {
-            streamReader = new StreamReader(filePath);
-            lineNumber = 1;
-            characterPositionInLine = 0;
-            ReadNextSymbol();
-        }
-        else
-        {
-            throw new FileNotFoundException($"Файл не найден: {filePath}");
-        }
+        Reader.code = code;
+        currentSymbol = -1;
+        lineNumber = 1;
+        characterPositionInLine = 0;
+        ReadNextSymbol();
     }
 
-    /// <summary>
-    /// Закрывает поток чтения.
-    /// </summary>
-    public static void Close()
-    {
-        streamReader?.Close();
-        streamReader = null;
-    }
 }

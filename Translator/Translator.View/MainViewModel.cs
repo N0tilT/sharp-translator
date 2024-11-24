@@ -88,12 +88,11 @@ namespace Translator.View.ViewModel
                       File.WriteAllText(sourceFilePath, InputText);
                       
                       var syntaxAnalyzer = new SyntaxAnalyzer();
-                      syntaxAnalyzer.Compile(sourceFilePath);
+                      syntaxAnalyzer.Compile(InputText);
 
                       var code = string.Join("\n", CodeGenerator.GetGeneratedCode());
                       OutputText = code;
                       File.WriteAllText(compiledFilePath, code);
-                      Reader.Close();
                       RunDosBoxTest(ProgramFileName, code);
                   }));
             }

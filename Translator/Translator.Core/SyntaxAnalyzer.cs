@@ -14,10 +14,11 @@ namespace Translator.Core
         /// <summary>
         /// Компилирует исходный код из указанного файла.
         /// </summary>
-        /// <param name="filename">Путь к исходному файлу.</param>
-        public void Compile(string filename)
+        /// <param name="code">Исходный код.</param>
+        public void Compile(string code)
         {
-            LexicalAnalyzer.Initialize(filename);
+            LexicalAnalyzer.Initialize(code);
+            CodeGenerator.Initialize();
             CodeGenerator.DeclareDataSegment();
 
             LexicalAnalyzer.ParseNextLexem();

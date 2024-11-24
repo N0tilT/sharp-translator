@@ -34,7 +34,7 @@
             Margin="10"
             AcceptsReturn="True"
             FontSize="16"
-            Text="{Binding InputText, UpdateSourceTrigger=PropertyChanged}"
+            Text="{Binding InputText}"
             VerticalScrollBarVisibility="Auto" />
 
         <TextBox

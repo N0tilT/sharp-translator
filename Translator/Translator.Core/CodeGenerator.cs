@@ -216,6 +216,11 @@ namespace Translator.Core
             return code.ToArray();
         }
 
+        public static void Initialize()
+        {
+            code.Clear();
+        }
+
         public static void AddSumInstruction()
         {
             AddInstruction("pop bx");
