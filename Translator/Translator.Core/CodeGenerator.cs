@@ -1,5 +1,7 @@
 ﻿
 
+
+
 namespace Translator.Core
 {
     /// <summary>
@@ -203,6 +205,7 @@ namespace Translator.Core
         public static void AddLoadIntegerInstruction(string? currentName)
         {
             AddInstruction($"mov ax, {currentName}");
+            AddInstruction("push ax");
         }
         /// <summary>
         /// Получает сгенерированный код в виде массива строк.
@@ -213,25 +216,48 @@ namespace Translator.Core
             return code.ToArray();
         }
 
-        internal static void AddSumInstruction()
+        public static void AddSumInstruction()
         {
+            AddInstruction("pop bx");
+            AddInstruction("pop ax");
+            AddInstruction("add ax, bx");
+            AddInstruction("push ax");
         }
 
-        internal static void AddSubtractInstruction()
+        public static void AddSubtractInstruction()
         {
+            AddInstruction("pop bx");
+            AddInstruction("pop ax");
+            AddInstruction("sub ax, bx");
+            AddInstruction("push ax");
         }
 
-        internal static void AddMultiplicationInstruction()
+        public static void AddMultiplicationInstruction()
         {
+            AddInstruction("pop bx");
+            AddInstruction("pop ax");
+            AddInstruction("mul bx");
+            AddInstruction("push ax");
         }
 
-        internal static void AddDivisionInstruction()
+        public static void AddDivisionInstruction()
         {
+            AddInstruction("pop bx");
+            AddInstruction("pop ax");
+            AddInstruction("xor dx, dx");
+            AddInstruction("div bx");
+            AddInstruction("mov ax,al");
+            AddInstruction("push ax");
         }
 
-        //(-A * -B) + (A * B)
-        internal static void AddEquityInstruction()
+        public static void AddRemainderInstruction()
         {
+            AddInstruction("pop bx");
+            AddInstruction("pop ax");
+            AddInstruction("xor dx, dx");
+            AddInstruction("div bx");
+            AddInstruction("mov ax,dx");
+            AddInstruction("push ax");
         }
     }
 }

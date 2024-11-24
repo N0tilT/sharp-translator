@@ -5,7 +5,7 @@ public enum Lexems
 {
     None, Name, 
     True, False, Logical, Integer,
-    Begin, End, Var, Print, Assign, If, While, EndIf, EndWhile, Equal, NotEqual, Less, LessOrEqual, Greater, GreaterOrEqual, Then, ElseIf,Else,Do,LeftBracket, RightBracket, Semi, Comma, EOF, Colon,
+    Begin, End, Var, Print, Assign, If, While, EndIf, EndWhile, Equal, NotEqual, Less, LessOrEqual, Greater, GreaterOrEqual, Then, ElseIf,Else,Do,LeftBracket, RightBracket, Semi, Comma, EOF, Colon, Remainder,
     Disjunction, Conjunction, Implication, Negation, BinaryOp,
     Sum,
     Subtract,
@@ -198,6 +198,12 @@ public static class LexicalAnalyzer
         {
             currentName = null;
             currentLexem = Lexems.Division;
+            Reader.ReadNextSymbol();
+        }
+        else if (Reader.CurrentSymbol == '%')
+        {
+            currentName = null;
+            currentLexem = Lexems.Remainder;
             Reader.ReadNextSymbol();
         }
         else if (Reader.CurrentSymbol == '!')

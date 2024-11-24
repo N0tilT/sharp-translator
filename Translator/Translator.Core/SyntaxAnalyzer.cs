@@ -36,7 +36,7 @@ namespace Translator.Core
             ParsePrintInstruction();
             CodeGenerator.DeclareMainProcedureEnd();
             CodeGenerator.DeclarePrintProcedure();
-            CodeGenerator.DeclarePrintSpaceProcedure();
+            //CodeGenerator.DeclarePrintSpaceProcedure();
             CodeGenerator.DeclareEndOfCode();
         }
 
@@ -54,7 +54,7 @@ namespace Translator.Core
                     CodeGenerator.AddInstruction("mov ax, " + LexicalAnalyzer.CurrentName);
                     CodeGenerator.AddInstruction("push ax");
                     CodeGenerator.AddInstruction("CALL PRINT");
-                    CodeGenerator.AddInstruction("CALL PRINT_SPACE");
+                    //CodeGenerator.AddInstruction("CALL PRINT_SPACE");
                     CodeGenerator.AddInstruction("pop ax");
                     LexicalAnalyzer.ParseNextLexem();
                 }
@@ -143,7 +143,7 @@ namespace Translator.Core
                 Identifier x = nameTable.FindByName(LexicalAnalyzer.CurrentName);
                 if (!x.Equals(default(Identifier)))
                 {
-                    ParseAssignmentInstruction(x.Type);
+                    ParseAssignmentInstruction();
                     CodeGenerator.AddInstruction("pop ax");
                     CodeGenerator.AddInstruction("mov " + x.Name + ", ax");
                 }
@@ -173,6 +173,7 @@ namespace Translator.Core
             currentLabel = lowerLabel;
             CodeGenerator.AddLabel();
             string exitLabel = CodeGenerator.GetCurrentLabel();
+            bool onlyIf = true;
 
             ParseExpression();
             CheckLexem(Lexems.Then);
@@ -181,6 +182,7 @@ namespace Translator.Core
 
             while (LexicalAnalyzer.CurrentLexem == Lexems.ElseIf)
             {
+                onlyIf = false;
                 CodeGenerator.AddInstruction(lowerLabel + ":");
                 CodeGenerator.AddLabel();
                 lowerLabel = CodeGenerator.GetCurrentLabel();
@@ -195,11 +197,15 @@ namespace Translator.Core
 
             if (LexicalAnalyzer.CurrentLexem == Lexems.Else)
             {
+                onlyIf = false;
                 CodeGenerator.AddInstruction(lowerLabel + ":");
                 LexicalAnalyzer.ParseNextLexem();
                 ParseInstructionSequence();
             }
-
+            if (onlyIf)
+            {
+                CodeGenerator.AddInstruction(lowerLabel + ":");
+            }
             CheckLexem(Lexems.EndIf);
             CodeGenerator.AddInstruction(exitLabel + ":");
         }
@@ -228,7 +234,7 @@ namespace Translator.Core
         /// <summary>
         /// Парсит инструкцию присваивания.
         /// </summary>
-        private void ParseAssignmentInstruction(tType type)
+        private void ParseAssignmentInstruction()
         {
             LexicalAnalyzer.ParseNextLexem();
             if (LexicalAnalyzer.CurrentLexem == Lexems.Assign)
@@ -249,7 +255,7 @@ namespace Translator.Core
         /// <returns>Тип операции</returns>
         private tType ParseExpression()
         {
-            tType t = ParseEquity();
+            tType t = ParseImplication();
 
             while (LexicalAnalyzer.CurrentLexem == Lexems.Equal ||
                    LexicalAnalyzer.CurrentLexem == Lexems.NotEqual ||
@@ -291,29 +297,7 @@ namespace Translator.Core
             }
             return t;
         }
-        /// <summary>
-        /// Парсит импликацию
-        /// </summary>
-        /// <returns>Тип операции</returns>
-        private tType ParseEquity()
-        {
-            tType type = ParseImplication();
-            if (LexicalAnalyzer.CurrentLexem == Lexems.Equal)
-            {
-                Lexems operatorLexem = LexicalAnalyzer.CurrentLexem;
-                LexicalAnalyzer.ParseNextLexem();
-                tType s_type = ParseImplication();
-                if (type == s_type)
-                {
-                    CodeGenerator.AddEquityInstruction();
-                    return tType.Bool;
-                }
-                else
-                    Error();
-
-            }
-            return type;
-        }
+       
         /// <summary>
         /// Парсит импликацию
         /// </summary>
@@ -380,12 +364,12 @@ namespace Translator.Core
         /// <returns>Тип операции</returns>
         private tType ParseSumOrSubtraction()
         {
-            tType type = ParseMultiplicationOrDivision();
+            tType type = ParseMultiplicationOrDivisionOrRemainder();
             while (LexicalAnalyzer.CurrentLexem == Lexems.Sum || LexicalAnalyzer.CurrentLexem == Lexems.Subtract)
             {
                 Lexems operatorLexem = LexicalAnalyzer.CurrentLexem;
                 LexicalAnalyzer.ParseNextLexem();
-                tType s_type = ParseMultiplicationOrDivision();
+                tType s_type = ParseMultiplicationOrDivisionOrRemainder();
                 if (type == s_type && type == tType.Int)
                     if (operatorLexem == Lexems.Sum)
                         CodeGenerator.AddSumInstruction();
@@ -404,10 +388,10 @@ namespace Translator.Core
         /// Парсит Умножение или деление
         /// </summary>
         /// <returns>Тип операции</returns>
-        private tType ParseMultiplicationOrDivision()
+        private tType ParseMultiplicationOrDivisionOrRemainder()
         {
             tType type = ParseSubexpression();
-            while (LexicalAnalyzer.CurrentLexem == Lexems.Multiplication || LexicalAnalyzer.CurrentLexem == Lexems.Division)
+            while (LexicalAnalyzer.CurrentLexem == Lexems.Multiplication || LexicalAnalyzer.CurrentLexem == Lexems.Division || LexicalAnalyzer.CurrentLexem == Lexems.Remainder)
             {
                 Lexems operatorLexem = LexicalAnalyzer.CurrentLexem;
                 LexicalAnalyzer.ParseNextLexem();
@@ -418,6 +402,8 @@ namespace Translator.Core
                         CodeGenerator.AddMultiplicationInstruction();
                     else if (operatorLexem == Lexems.Division)
                         CodeGenerator.AddDivisionInstruction();
+                    else if (operatorLexem == Lexems.Remainder)
+                        CodeGenerator.AddRemainderInstruction();
                     else
                         Error();
                 else
