@@ -35,10 +35,15 @@ string compiledFilePath = Path.Combine(baseDirectory, ProgramFileName + ".asm");
 string sourceCode = File.ReadAllText(sourceFilePath);
 
 var syntaxAnalyzer = new SyntaxAnalyzer();
-syntaxAnalyzer.Compile(sourceCode);
-
-var code = string.Join("\n", CodeGenerator.GetGeneratedCode());
-File.WriteAllText(compiledFilePath, code);
-Console.WriteLine(code);
-
-RunDosBoxTest(ProgramFileName, code);
+try
+{
+    syntaxAnalyzer.Compile(sourceCode);
+    var code = string.Join("\n", CodeGenerator.GetGeneratedCode());
+    File.WriteAllText(compiledFilePath, code);
+    Console.WriteLine(code);
+    RunDosBoxTest(ProgramFileName, code);   
+}
+catch (Exception e)
+{
+    Console.WriteLine(e.Message);
+}

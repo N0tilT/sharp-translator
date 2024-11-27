@@ -86,14 +86,20 @@ namespace Translator.View.ViewModel
                       string sourceFilePath = Path.Combine(baseDirectory, SourceFileName + ".txt");
                       string compiledFilePath = Path.Combine(baseDirectory, ProgramFileName + ".asm");
                       File.WriteAllText(sourceFilePath, InputText);
-                      
-                      var syntaxAnalyzer = new SyntaxAnalyzer();
-                      syntaxAnalyzer.Compile(InputText);
+                      try
+                      {
+                          var syntaxAnalyzer = new SyntaxAnalyzer();
+                          syntaxAnalyzer.Compile(InputText);
 
-                      var code = string.Join("\n", CodeGenerator.GetGeneratedCode());
-                      OutputText = code;
-                      File.WriteAllText(compiledFilePath, code);
-                      RunDosBoxTest(ProgramFileName, code);
+                          var code = string.Join("\n", CodeGenerator.GetGeneratedCode());
+                          OutputText = code;
+                          File.WriteAllText(compiledFilePath, code);
+                          RunDosBoxTest(ProgramFileName, code);
+                      }
+                      catch (Exception ex)
+                      {
+                          OutputText = ex.Message;
+                      }
                   }));
             }
         }

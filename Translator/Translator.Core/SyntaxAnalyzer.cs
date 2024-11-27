@@ -499,7 +499,7 @@ namespace Translator.Core
         /// </summary>
         private void Error()
         {
-            Console.WriteLine(
+            throw new Exception(
                 $"Ошибка в строке {Reader.LineNumber}, позиция {Reader.CharacterPositionInLine}: " +
                 $"Неверная лексема: {LexicalAnalyzer.CurrentLexem}");
         }
