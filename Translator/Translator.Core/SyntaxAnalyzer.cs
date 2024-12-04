@@ -20,7 +20,7 @@ namespace Translator.Core
             LexicalAnalyzer.Initialize(code);
             CodeGenerator.Initialize();
             CodeGenerator.DeclareDataSegment();
-
+             
             LexicalAnalyzer.ParseNextLexem();
             ParseVariableDeclaration();
             CodeGenerator.DeclareVariables(nameTable);

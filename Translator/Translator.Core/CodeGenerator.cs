@@ -44,8 +44,8 @@ namespace Translator.Core
         /// </summary>
         public static void DeclareStackAndCodeSegments()
         {
-            AddInstruction("PRINT_BUF DB ' ' DUP(10)");
-            AddInstruction("BUFEND    DB '$'");
+            AddInstruction("PRINT_BUF DW ' ' DUP(10)");
+            AddInstruction("BUFEND    DW '$'");
             AddInstruction("data ends");
             AddInstruction("stk segment stack");
             AddInstruction("db 256 dup (\"?\")");
